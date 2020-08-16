@@ -105,7 +105,7 @@ def updated() {
 def initialize() {
 	sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "zwave", hubHardwareId: device.hub.hardwareID])
 	
-	if (zwaveInfo.mfr == "018C" && zwaveInfo.prod == "0042" && zwaveInfo.model == "0005") {   //Dawon Smart Plug추가
+	if ((zwaveInfo.mfr == "018C" && zwaveInfo.prod == "0042") && (zwaveInfo.model == "0005" || zwaveInfo.model == "0008")) {   //Dawon Smart Plug추가
 	    unschedule()
         runEvery1Minute(poll)
     }
