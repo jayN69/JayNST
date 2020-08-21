@@ -26,11 +26,11 @@ metadata {
 		command "reset"
 
 		fingerprint mfr: "018C", prod: "0042", model: "0005", deviceJoinName: "Dawon Smart Plug", ocfDeviceType: "oic.d.smartplug"
-        fingerprint mfr: "018C", prod: "0042", model: "0008", deviceJoinName: "Dawon Smart Multitab", ocfDeviceType: "oic.d.smartplug"
+		fingerprint mfr: "018C", prod: "0042", model: "0008", deviceJoinName: "Dawon Smart Multitab", ocfDeviceType: "oic.d.smartplug"
 		
 	}
 
-	// simulator metadataa
+	// simulator metadata
 	simulator {
 		status "on":  "command: 2003, payload: FF"
 		status "off": "command: 2003, payload: 00"
@@ -82,17 +82,17 @@ def installed() {
 	// Device-Watch simply pings if no device events received for 32min(checkInterval)
 	initialize()
 	
-    //if (zwaveInfo?.mfr?.equals("0063") || zwaveInfo?.mfr?.equals("014F")) { // These old GE devices have to be polled. GoControl Plug refresh status every 15 min.
+	//if (zwaveInfo?.mfr?.equals("0063") || zwaveInfo?.mfr?.equals("014F")) { // These old GE devices have to be polled. GoControl Plug refresh status every 15 min.
 	//	runEvery15Minutes("poll", [forceForLocallyExecuting: true])
 	//}
 }
 
 def updated() {
 	// Device-Watch simply pings if no device events received for 32min(checkInterval)
-    log.debug "updated()"
+	log.debug "updated()"
 	initialize()
 	
-    //if (zwaveInfo?.mfr?.equals("0063") || zwaveInfo?.mfr?.equals("014F")) { // These old GE devices have to be polled. GoControl Plug refresh status every 15 min.
+	//if (zwaveInfo?.mfr?.equals("0063") || zwaveInfo?.mfr?.equals("014F")) { // These old GE devices have to be polled. GoControl Plug refresh status every 15 min.
 	//	unschedule("poll", [forceForLocallyExecuting: true])
 	//	runEvery15Minutes("poll", [forceForLocallyExecuting: true])
 	//}
@@ -187,6 +187,15 @@ def zwaveEvent(physicalgraph.zwave.commands.manufacturerspecificv2.ManufacturerS
 	result << createEvent(descriptionText: "$device.displayName MSR: $msr", isStateChange: false)
 }
 
+def zwaveEvent(physicalgraph.zwave.commands.notificationv3.NotificationReport cmd){
+    if ((cmd.notificationType == 0x08) && zwaveInfo?.mfr?.equals("018C")) {
+        if (cmd.event == 0x02) {
+            createEvent(name: "switch", value: "off")
+        } else if (cmd.event == 0x03) {
+            createEvent(name: "switch", value: "on")
+        }
+    }
+}
 def zwaveEvent(physicalgraph.zwave.Command cmd) {
 	log.debug "${device.displayName}: Unhandled: $cmd"
 	[:]
@@ -217,7 +226,7 @@ def ping() {
 }
 
 def poll() {
-    log.debug "poll()"
+	log.debug "poll()"
 	sendHubCommand(refresh())
 }
 
@@ -236,6 +245,7 @@ def configure() {
 
 	log.debug "Configure zwaveInfo: "+zwaveInfo
 
+	/*
 	if (zwaveInfo.mfr == "0086") {	// Aeon Labs meter
 		result << response(encap(zwave.configurationV1.configurationSet(parameterNumber: 80, size: 1, scaledConfigurationValue: 2)))	// basic report cc
 		result << response(encap(zwave.configurationV1.configurationSet(parameterNumber: 101, size: 4, scaledConfigurationValue: 12)))	// report power in watts
@@ -248,6 +258,7 @@ def configure() {
 	} else if (zwaveInfo.mfr == "0154" && zwaveInfo.prod == "0003" && zwaveInfo.model == "000A") {
 		result << response(encap(zwave.configurationV1.configurationSet(parameterNumber: 25, size: 1, scaledConfigurationValue: 1))) //report every 1W change
 	}
+	*/
 	result << response(encap(meterGet(scale: 0)))
 	result << response(encap(meterGet(scale: 2)))
 	result
