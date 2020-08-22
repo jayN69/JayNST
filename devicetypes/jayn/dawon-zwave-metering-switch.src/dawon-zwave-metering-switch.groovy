@@ -1,4 +1,4 @@
-/**
+﻿/**
  *	Copyright 2015 SmartThings
  *
  *	Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -49,6 +49,10 @@ metadata {
 		reply "200100,delay 100,2502": "command: 2503, payload: 00"
 	}
 
+    preferences {
+        input name: "resetKWH", title:"Reset Energy(KWH)(초기화 주의!)", type:"enum", options: ["Yes", "No"], description: "에너지 소비량을 초기화합니다.(KWH)", required: true, defaultValue: "No"
+    }
+    
 	// tile definitions
 	tiles(scale: 2) {
 		multiAttributeTile(name:"switch", type: "generic", width: 6, height: 4, canChangeIcon: true){
@@ -92,10 +96,12 @@ def updated() {
 	log.debug "updated()"
 	initialize()
 	
-	//if (zwaveInfo?.mfr?.equals("0063") || zwaveInfo?.mfr?.equals("014F")) { // These old GE devices have to be polled. GoControl Plug refresh status every 15 min.
-	//	unschedule("poll", [forceForLocallyExecuting: true])
-	//	runEvery15Minutes("poll", [forceForLocallyExecuting: true])
-	//}
+	//에너지 소비량을 초기화 한다.
+    if (resetKWH == "Yes") {
+        log.debug "에너지 소비량(Energy(KWH))을 초기화 합니다."
+        reset()
+    }
+    
 	try {
 		if (!state.MSR) {
 			response(zwave.manufacturerSpecificV2.manufacturerSpecificGet().format())
@@ -109,7 +115,7 @@ def initialize() {
 	sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "zwave", hubHardwareId: device.hub.hardwareID])
 	
 	if ((zwaveInfo.mfr == "018C" && zwaveInfo.prod == "0042") && (zwaveInfo.model == "0005" || zwaveInfo.model == "0008")) {   //Dawon Smart Plug추가
-        log.debug "Set schdule : runEvery1Minute(refresh)"
+        log.debug "Set schdule : runEvery1Minute(poll)"
 	    unschedule()
         runEvery1Minute(poll)
     }
@@ -232,10 +238,19 @@ def poll() {
 
 def refresh() {
 	log.debug "refresh()"
-	encapSequence([
+	
+    /* 로그에 energy, power, energy 순으로 연속 3개 나온다.
+    encapSequence([
 		zwave.switchBinaryV1.switchBinaryGet(),
-		meterGet(scale: 0),
-		meterGet(scale: 2)
+		meterGet(scale: 0), //에너지 소비량(KWH) 
+		meterGet(scale: 2)  //소비전력
+	])
+    */
+    // 밑의 하나를 삭제하니 energy, power 연속 두가지만 나온다.
+    encapSequence([
+		//zwave.switchBinaryV1.switchBinaryGet(),
+        meterGet(scale: 0), //에너지 소비량(KWH)
+        meterGet(scale: 2)  //소비전력
 	])
 }
 
@@ -244,7 +259,7 @@ def configure() {
 	def result = []
 
 	log.debug "Configure zwaveInfo: "+zwaveInfo
-
+        
 	/*
 	if (zwaveInfo.mfr == "0086") {	// Aeon Labs meter
 		result << response(encap(zwave.configurationV1.configurationSet(parameterNumber: 80, size: 1, scaledConfigurationValue: 2)))	// basic report cc
@@ -265,7 +280,8 @@ def configure() {
 }
 
 def reset() {
-	encapSequence([
+    log.debug "reset()"
+    encapSequence([
 		meterReset(),
 		meterGet(scale: 0)
 	])
