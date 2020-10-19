@@ -173,8 +173,8 @@ private int getPowerDiv() {    //소비전력(w)
 private int getEnergyDiv() {   //에너지 소비량(kWh)
     if (isDawonOutlet()) {
         1000
-    } else if (isSengledOutlet()) {
-        10000
+    //} else if (isSengledOutlet()) {
+    //    10000
     } else if (isHeimanOutlet()) {  //다원과 마찬가지로 1000을 나눔
         1000
     } else {
