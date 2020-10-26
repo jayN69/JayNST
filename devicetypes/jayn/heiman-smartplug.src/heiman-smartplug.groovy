@@ -10,6 +10,7 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ * Base on "Zigbee Metering Plug"
  */
 import physicalgraph.zigbee.zcl.DataType
 
@@ -175,8 +176,8 @@ private int getEnergyDiv() {   //에너지 소비량(kWh)
         1000
     //} else if (isSengledOutlet()) {
     //    10000
-    } else if (isHeimanOutlet()) {  //다원과 마찬가지로 1000을 나눔
-        1000
+    } else if (isHeimanOutlet()) {  //다원과 달리 10000을 나눔
+        10000
     } else {
         100
     }
